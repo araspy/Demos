@@ -1,0 +1,204 @@
+import RPi.GPIO as GPIO
+import time
+from time import sleep
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BOARD)
+
+#SQL Setup
+import mysql.connector
+
+#LCD Setup
+from lcd import drivers
+from datetime import datetime
+display = drivers.Lcd()
+
+#Pin Setup
+
+#Relay
+redPump = 16
+yellowPump = 15
+whitePump = 13
+GPIO.setup(redPump, GPIO.OUT)#Red
+GPIO.setup(yellowPump, GPIO.OUT)#Yellow
+GPIO.setup(whitePump, GPIO.OUT)#White
+#Turn off on start
+GPIO.output(redPump, GPIO.HIGH)
+GPIO.output(yellowPump, GPIO.HIGH)
+GPIO.output(whitePump, GPIO.HIGH)
+
+#Distance Sensor
+TRIG = 18
+ECHO = 22
+GPIO.setup(TRIG, GPIO.OUT)
+GPIO.setup(ECHO, GPIO.IN)
+
+#Buttons
+Red = 33
+Yellow = 36
+White = 37
+GPIO.setup(Red, GPIO.IN, pull_up_down = GPIO.PUD_UP) #Red
+GPIO.setup(Yellow, GPIO.IN, pull_up_down = GPIO.PUD_UP) #Yellow
+GPIO.setup(White, GPIO.IN, pull_up_down = GPIO.PUD_UP) #White
+
+standby = True
+active = False
+
+
+def hedgehog():
+    GPIO.output(TRIG, False)
+    time.sleep(2)
+    GPIO.output(TRIG, True)
+    time.sleep(0.00001)
+    GPIO.output(TRIG, False)
+    
+    while GPIO.input(ECHO)==0:
+        pulse_start = time.time()
+    while GPIO.input(ECHO)==1:
+        pulse_end =  time.time()
+        
+    pulse_duration = pulse_end - pulse_start
+    distance = pulse_duration * 17150
+    distance = round(distance, 2)
+    print(distance)
+    return distance
+
+def pump(button):
+    pumping = True
+    #print(button)
+    while pumping:
+        fill = hedgehog()
+        if button == "Red":
+            #pump red
+            if fill > 5:
+                GPIO.output(redPump, GPIO.LOW)
+            else:
+                GPIO.output(redPump, GPIO.HIGH)
+                pumping = False
+                squidle(button)
+        elif button == "Yellow":
+            #pump yellow
+            if fill > 5:
+                GPIO.output(yellowPump, GPIO.LOW)
+            else:
+                GPIO.output(yellowPump, GPIO.HIGH)
+                pumping = False
+                squidle(button)
+        elif button == "White":
+            #pump white
+            if fill > 5:
+                GPIO.output(whitePump, GPIO.LOW)
+            else:
+                GPIO.output(whitePump, GPIO.HIGH)
+                pumping = False
+                squidle(button)
+        else:
+            pass
+        
+def squidle(button):
+    mydb = mysql.connector.connect(host="database-1.cca3svhf41bs.us-east-2.rds.amazonaws.com", user="admin", passwd="coolbeans1", database="Stockr_Overall")
+    mycursor = mydb.cursor()
+    mycursor.execute("SELECT * FROM Stockr_Overall.Overall ORDER BY TimeDisp DESC LIMIT 1")
+    
+    # datetime object containing current date and time
+    wayne = datetime.now()
+ 
+    #print("now =", wayne)
+
+    # dd/mm/YY H:M:S
+    robin = wayne.strftime("%m/%d/%Y %H:%M")
+    #print(robin)
+    
+    size = 1
+    records = mycursor.fetchall()
+    for row in records:
+        lemonTot = int(row[5])
+        blueTot = int(row[6])
+        punchTot = int(row[7])
+        lemRem = int(row[8])
+        blemRem = int(row[9])
+        pumRum = int(row[10])
+        
+        if button == "Red":
+            #pum
+            punchTot += size
+            if pumRum == 1:
+                pumRum = 10
+            else:
+                pumRum -= size
+            Fieri = "Punch"
+            
+        elif button == "Yellow":
+            #lemon
+            lemonTot += size
+            if lemRem == 1:
+                lemRem = 10
+            else:
+                lemRem -= size
+            Fieri = "Lemonade"
+            
+        elif button == "White":
+            #blue
+            blueTot += size
+            if blemRem == 1:
+                blemRem = 10
+            else:
+                blemRem -= size
+            Fieri = "CoolBlue"
+            
+        shimi = "INSERT INTO Overall (StoreID, StoreName, MachineID, MachineStatus, NextMaintenance, Total_Lemon, Total_Blue, Total_Punch, Rem_Lemon, Rem_Blue, Rem_Punch, Flavor, Size, TimeDisp) VALUES (10,'Ted''s BBQ',10,'Active','4/25/2022',"+str(lemonTot)+","+str(blueTot)+","+str(punchTot)+","+str(lemRem)+","+str(blemRem)+","+str(pumRum)+","+"'"+Fieri+"'"+","+str(size)+","+"'"+robin+"');"
+        mycursor.execute(shimi)
+        mydb.commit()
+        
+#running, but not activated
+while standby:
+    #activated for main function
+    display.lcd_clear()
+    display.lcd_display_string("In Stanby", 1)
+    while active:
+        
+        #print("Writing to display")
+        display.lcd_display_string("Please Select", 1)
+        display.lcd_display_string("Your Drink", 2)
+        
+        rState = GPIO.input(Red)
+        yState = True #yState = GPIO.input(Yellow)
+        wState = GPIO.input(White)
+        
+        if rState == False:
+            display.lcd_clear()
+            display.lcd_display_string("Red Selected", 1)
+            print("Red Selected")
+            pump("Red")
+            active = False
+        elif yState == False:
+            display.lcd_clear()
+            display.lcd_display_string("Yellow Selected", 1)
+            print("Yellow Selected")
+            pump("Yellow")
+            active = False
+        elif wState == False:
+            display.lcd_clear()
+            display.lcd_display_string("White Selected", 1)
+            print("White Selected")
+            pump("White")
+            active = False
+        else:
+            pass
+        
+        
+    rState = GPIO.input(Red)
+    yState = GPIO.input(Yellow)
+    wState = GPIO.input(White)
+    
+    if rState == False:
+        if yState == False:
+            if wState == False:
+                time.sleep(3)
+                print("We be goin'")
+                active = True
+            else:
+                pass
+        else:
+            pass
+    else:
+        pass
