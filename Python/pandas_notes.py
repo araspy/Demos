@@ -117,11 +117,11 @@ df = pd.read_csv('pokemon_data.csv')
 
 #Working with large amounts of data
 #make a new dataframe that is a shrunken down version of the massive one:
-new_df = pd.DataFrame(columns = df.columns)
-for df in pd.read_csv('modified.csv', chunksize = 5) :
-    results = df.groupby(['Type 1']).count()
+#new_df = pd.DataFrame(columns = df.columns)
+#for df in pd.read_csv('modified.csv', chunksize = 5) :
+    #results = df.groupby(['Type 1']).count()
 
-    new_df = pd.concat([new_df, results])
+    #new_df = pd.concat([new_df, results])
 
 
 
@@ -132,19 +132,49 @@ for df in pd.read_csv('modified.csv', chunksize = 5) :
 
 
 #user input
-country = input('Enter country name: ')
+#country = input('Enter country name: ')
 
 #connections
-conn = MySQLdb.connect(host="112.0.0.1", port=3306, user="root",passwd="root",db="world")
+#conn = MySQLdb.connect(host="112.0.0.1", port=3306, user="root",passwd="root",db="world")
 
 #dataframe produced by parameterized query
-df = pd.read_sql("SELECT * FROM COUNTRY WHERE Name = '%s'" %(country,), conn)
-print(df)
+#df = pd.read_sql("SELECT * FROM COUNTRY WHERE Name = '%s'" %(country,), conn)
+#print(df)
 
 
 
 
+#json read
+#import json
+#emp_records_json_str = json.dumps(EmployeeRecords)
+#df = pd.read_json(emp_records_json_str, orient='records', convert_dates=['DOJ'])
+#print(df)
 
+
+#converting a time column to Pandas' special datetime format to do some fun organization stuff:
+#ufo = pd.read_csv('link')
+#ufo['Time'] = pd.to_datetime(ufo.Time)
+#Time column is no longer string
+#ufo.Time.dt.hour #pulls out the hour for us
+#ufo.Time.dt.weekday_name
+#ufo.Time.dt.weekday # just pulls the number
+#ufo.Time.dt.dayofyear # pulls like, 152
+#can use timestamps as part of comparisons
+#ts = pd.to_datetime('1/1/1999')
+#ufo.loc[ufo.Time >= ts, :] #colon just means show me all columns
+#ufo.Time.max() #shows latest time in timeseries
+#ufo.Time.max() - ufo.Time.min() #find gap covered by data
+#(ufo.Time.max() - ufo.Time.min()).days #just get it in days
+
+#analyze how many reported sightings by year
+#%matplotlib inline
+
+#ufo['Year'] = ufo.Time.year
+#ufo.Year.value_counts().sort_index().plot()
+
+
+#Hierarchical Indexing (MultiIndex)- having more than one index in dataframe
+df.set_index(['city', 'rank'] drop = False) #drop false = don't get rid of these columns just use them as a n index
 
 
 
