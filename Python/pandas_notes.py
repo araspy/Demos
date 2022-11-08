@@ -125,11 +125,21 @@ for df in pd.read_csv('modified.csv', chunksize = 5) :
 
 
 
+#can also read from html site (if it has a table) and SQL DB and JSON
+#df = pd.read_html(url)
+#df = pd.read_sql("query")
+#df = pd.read_json()
 
 
+#user input
+country = input('Enter country name: ')
 
+#connections
+conn = MySQLdb.connect(host="112.0.0.1", port=3306, user="root",passwd="root",db="world")
 
-
+#dataframe produced by parameterized query
+df = pd.read_sql("SELECT * FROM COUNTRY WHERE Name = '%s'" %(country,), conn)
+print(df)
 
 
 
