@@ -149,6 +149,18 @@ df = pd.read_csv('pokemon_data.csv')
 #emp_records_json_str = json.dumps(EmployeeRecords)
 #df = pd.read_json(emp_records_json_str, orient='records', convert_dates=['DOJ'])
 #print(df)
+#convert csv to json:
+#df = pd.read_csv('file.csv')
+#df.to_json('file.json')
+#convert json to dataframe
+with open("filepath.json") as f:
+    data = json.load(f)
+df = pd.DataFrame(columns=["userId", "ID", "Title", "Completed"])
+for i in range(0, len(data)):
+    currentItem = data[i]
+    df.loc[i] = [currentItem["userId"], currentItem["id"], currentItem["title"], currentItem["completed"]]
+
+
 
 
 #converting a time column to Pandas' special datetime format to do some fun organization stuff:
@@ -176,6 +188,54 @@ df = pd.read_csv('pokemon_data.csv')
 #Hierarchical Indexing (MultiIndex)- having more than one index in dataframe
 df.set_index(['city', 'rank'] drop = False) #drop false = don't get rid of these columns just use them as a n index
 
+
+#want to drop rows that don't have an email
+df.dropna(axis = 'index', how = 'any', subset = ['email'])
+
+#i either need first name or last name. it just can't be that 'all' those values are missing
+df.dropna(axis = 'index', how = 'all', subset = ['last', 'email'])
+
+#fix custom empty values. like if someone put string 'missing' 
+df.replace('Missing', np.nan, inplace = True)
+
+#replace empty values with a string
+df.fillna('MISSING')
+
+
+
+#type(np.nan) is a float
+
+
+
+
+#filtering
+#numeric
+orders[orders.Sales >= 500]
+#characters
+orders[ordeers['Order Priority'] ! = 'High']
+#Filtering with multiple criteria
+orders[(orders['Order Priority'] ! = 'High') | (orders['Customer Segment'] == 'Small Business')]
+#using isin to shorten the OR condition
+orders[orders['Ship More'].isin(['Regular Air', 'Delivery Truck'])]
+
+
+
+
+
+#merge and join. one honors the index, the other doesnt care.
+#merging on multiple columns allows for less data duplicates in df
+print(pd.merge(df1,df2, on=['HPI', 'Int_rate']))
+#can do a join instead. give them an index to join on
+df1.set_index('HPI', inplace = True)
+df2.set_index('HPI', inplace = True)
+joined = df1.join(df2)
+print(joined)
+#controlling left, right, outer, or inner merge. inner by default
+merged = pd.merge(df1,df3, on = 'Year', how='left')
+merged.set_index('Year', inplace = True)
+print(merged)
+#the main idea is to merge two datasets on a shared column. merge when index doesn't matter to you.
+#
 
 
 
