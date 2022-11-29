@@ -243,3 +243,33 @@ glueContext.write_dynamic_frame.from_jdbc_conf(productlineDF,catalog_connection 
                                                redshift_tmp_dir = "s3://dojo-data-lake/data/script")
 
 
+
+
+
+
+#PYSPARK DIRECT GLUE SCRIPT
+
+args = getResolvedOptions(sys.argv, ['JOB_NAME'])
+
+sc = SparkContext()
+glueContext = GlueContext(sc)
+spark = glueContext.spark_session
+job = Job(glueContext)
+job.init(args['JOB_NAME'], args)
+
+#lift data from data catalog
+datasource0 = glueConteext.create_dynamic_frame.from_catalog(database = "customers_database", table_name = "customers_csv", transformation_ctx = "datasource0")
+#change the name of the columns
+applymapping1 = ApplyMapping.apply(frame = datasource0, mappings = [("customerid", "long", "customerid", "long"), ("namestyle", "boolean", "namestyle", "boolean), ("title", "string" ...)])
+#applying the mapping / name changes
+resolvechoice2 = ResolveChoice.apply(frame = applymapping1, choice = "make_struct", transformation_ctx = "resolvechoice2")
+#drop null fields
+dropnullfields3 = DropNullFields.apply(frame = resolvechoice 2, transformation_ctx = "dropnullfields3")
+#write to the S3                                                                                                           
+datasink4 = glueContext.write_dynamic_frame.from_options(frame = dropnullfields3, connection_type = "s3", connection_options = {"path": "s3://glue-full-practice/data/customers"}
+                                                         
+job.commit()
+
+
+#trigger
+aws glue create-trigger --name MyTrigger --type SCHEDULED --schedule  "cron(0 12 * * ? *)" --actions CrawlerName=MyCrawler --start-on-creation  
